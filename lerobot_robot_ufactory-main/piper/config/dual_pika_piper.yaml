@@ -1,0 +1,94 @@
+# 方案二：两套 Pika 分别遥操两台 Piper follower（末端位姿/MOVE P）。
+# 首次上真机务必先将 move_speed_percent 和单周期限幅保持在较小值。
+robot:
+  type: uf::dual_piper
+  id: dual_piper
+  parallel_connect: true
+  parallel_observation: true
+  parallel_action: true
+  robots:
+    left:
+      type: uf::piper
+      id: left_piper
+      port: can_follower1
+      control_space: cartesian
+      configure_role_on_connect: true
+      park_on_connect: false
+      park_on_disconnect: false
+      disable_torque_on_disconnect: true
+      max_cartesian_step_mm: 5.0
+      max_rotation_step_rad: 0.05
+      workspace_x: [100, 600]
+      workspace_y: [-500, 500]
+      workspace_z: [50, 600]
+      move_mode: move_p
+      move_speed_percent: 15
+      gripper_effort: 1000
+      cameras:
+        wrist:
+          type: opencv
+          index_or_path: /dev/v4l/by-id/REPLACE_LEFT_CAMERA
+          width: 640
+          height: 480
+          fps: 30
+          fourcc: MJPG
+    right:
+      type: uf::piper
+      id: right_piper
+      port: can_follower2
+      control_space: cartesian
+      configure_role_on_connect: true
+      park_on_connect: false
+      park_on_disconnect: false
+      disable_torque_on_disconnect: true
+      max_cartesian_step_mm: 5.0
+      max_rotation_step_rad: 0.05
+      workspace_x: [100, 600]
+      workspace_y: [-500, 500]
+      workspace_z: [50, 600]
+      move_mode: move_p
+      move_speed_percent: 15
+      gripper_effort: 1000
+      cameras:
+        wrist:
+          type: opencv
+          index_or_path: /dev/v4l/by-id/REPLACE_RIGHT_CAMERA
+          width: 640
+          height: 480
+          fps: 30
+          fourcc: MJPG
+
+teleop:
+  type: uf::dual_pika_teleop
+  id: dual_pika
+  parallel_read: true
+  teleops:
+    left:
+      type: uf::pika_teleop
+      id: left_pika
+      port: /dev/REPLACE_LEFT_PIKA
+      frequency: 100
+      use_gripper: true
+      scale_xyz: 1.0
+      tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+      robot_base_pose: [300, 150, 250, 180, 0, 0]
+    right:
+      type: uf::pika_teleop
+      id: right_pika
+      port: /dev/REPLACE_RIGHT_PIKA
+      frequency: 100
+      use_gripper: true
+      scale_xyz: 1.0
+      tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+      robot_base_pose: [300, -150, 250, 180, 0, 0]
+
+dataset:
+  root: ./data/dual_pika_piper
+  repo_id: local/dual_pika_piper
+  single_task: REPLACE_TASK_DESCRIPTION
+  fps: 30
+  episode_time_s: 60
+  reset_time_s: 20
+  num_episodes: 50
+  push_to_hub: false
+

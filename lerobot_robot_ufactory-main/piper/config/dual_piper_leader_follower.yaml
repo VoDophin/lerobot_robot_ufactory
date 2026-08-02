@@ -1,0 +1,77 @@
+# 方案三：两台 Piper leader 分别遥操两台 Piper follower（双臂主从）。
+# 需要四路不同的 CAN 口；动作空间为归一化关节位置。
+robot:
+  type: uf::dual_piper
+  id: dual_piper
+  parallel_connect: true
+  parallel_observation: true
+  parallel_action: true
+  robots:
+    left:
+      type: uf::piper
+      id: left_follower
+      port: can_follower1
+      control_space: joint
+      configure_role_on_connect: true
+      park_on_connect: false
+      park_on_disconnect: false
+      disable_torque_on_disconnect: true
+      max_relative_target: 3.0
+      move_speed_percent: 20
+      cameras:
+        wrist:
+          type: opencv
+          index_or_path: /dev/v4l/by-id/REPLACE_LEFT_CAMERA
+          width: 640
+          height: 480
+          fps: 30
+          fourcc: MJPG
+    right:
+      type: uf::piper
+      id: right_follower
+      port: can_follower2
+      control_space: joint
+      configure_role_on_connect: true
+      park_on_connect: false
+      park_on_disconnect: false
+      disable_torque_on_disconnect: true
+      max_relative_target: 3.0
+      move_speed_percent: 20
+      cameras:
+        wrist:
+          type: opencv
+          index_or_path: /dev/v4l/by-id/REPLACE_RIGHT_CAMERA
+          width: 640
+          height: 480
+          fps: 30
+          fourcc: MJPG
+
+teleop:
+  type: uf::dual_piper_leader
+  id: dual_piper_leader
+  parallel_connect: true
+  parallel_read: true
+  teleops:
+    left:
+      type: uf::piper_leader
+      id: left_leader
+      port: can_leader1
+      configure_role_on_connect: true
+      disable_torque_on_disconnect: true
+    right:
+      type: uf::piper_leader
+      id: right_leader
+      port: can_leader2
+      configure_role_on_connect: true
+      disable_torque_on_disconnect: true
+
+dataset:
+  root: ./data/dual_piper_leader_follower
+  repo_id: local/dual_piper_leader_follower
+  single_task: REPLACE_TASK_DESCRIPTION
+  fps: 30
+  episode_time_s: 60
+  reset_time_s: 20
+  num_episodes: 50
+  push_to_hub: false
+

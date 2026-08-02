@@ -1,0 +1,60 @@
+# Convenience copy for users looking under config/pika.
+# This configuration requires the optional Piper subproject:
+#   pip install -e .
+#   pip install -e ./piper
+# Use the Piper entry points so uf::piper is registered:
+#   uf-piper-teleop --config_path=config/pika/pika_piper_record_config.yaml
+#   uf-piper-record --config_path=config/pika/pika_piper_record_config.yaml
+robot:
+  type: uf::piper
+  id: piper_follower
+  # port: can_follower
+  port: can0
+  control_space: cartesian
+  # true maps Pika's hand gripper/trigger value to Piper's gripper.
+  # set both robot.use_gripper and teleop.use_gripper to false for pose-only teleop.
+  use_gripper: true
+  configure_role_on_connect: true
+  park_on_connect: false
+  park_on_disconnect: false
+  disable_torque_on_disconnect: true
+  max_cartesian_step_mm: 5.0
+  max_rotation_step_rad: 0.05
+  workspace_x: [100, 600]  # 参数含义需要确定
+  workspace_y: [-500, 500]
+  workspace_z: [50, 600]
+  move_mode: move_p
+  move_speed_percent: 15
+  gripper_effort: 1000
+  cameras:
+    wrist:
+      type: opencv
+      # index_or_path: /dev/v4l/by-id/
+      index_or_path: /dev/v4l/by-id/usb-DECXIN_CAMERA_DECXIN_CAMERA_01.00.00-video-index0
+      width: 640
+      height: 480
+      fps: 30
+      fourcc: MJPG
+
+teleop:
+  type: uf::pika_teleop
+  id: pika_teleop
+  # port: /dev/REPLACE_PIKA
+  port: /dev/ttyUSB0
+  frequency: 100
+  # Pika is the input device here; this reads its gripper/trigger as a command signal.
+  use_gripper: true  # 注意
+  scale_xyz: 1.0
+  tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+  robot_base_pose: [300, 0, 250, 180, 0, 0]
+
+dataset:
+  root: ./data/single_pika_piper
+  repo_id: local/single_pika_piper
+  # single_task: REPLACE_TASK_DESCRIPTION
+  single_task: "Move the end effector to the target."
+  fps: 30
+  episode_time_s: 60
+  reset_time_s: 20
+  num_episodes: 50
+  push_to_hub: false
