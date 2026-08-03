@@ -17,14 +17,14 @@ robot:
   configure_role_on_connect: true
   park_on_connect: false
   park_on_disconnect: false
-  disable_torque_on_disconnect: true
-  max_cartesian_step_mm: 5.0
-  max_rotation_step_rad: 0.05
-  workspace_x: [100, 600]  # 参数含义需要确定
+  disable_torque_on_disconnect: false
+  max_cartesian_step_mm: 3.0
+  max_rotation_step_rad: 0.03
+  workspace_x: [100, 600]  
   workspace_y: [-500, 500]
   workspace_z: [50, 600]
   move_mode: move_p
-  move_speed_percent: 15
+  move_speed_percent: 10
   gripper_effort: 1000
   cameras:
     wrist:
@@ -43,8 +43,8 @@ teleop:
   port: /dev/ttyUSB0
   frequency: 100
   # Pika is the input device here; this reads its gripper/trigger as a command signal.
-  use_gripper: true  # 注意
-  scale_xyz: 1.0
+  use_gripper: true 
+  scale_xyz: 0.5
   tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
   robot_base_pose: [300, 0, 250, 180, 0, 0]
 

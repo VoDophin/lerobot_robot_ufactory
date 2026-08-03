@@ -166,6 +166,7 @@ def teleop_loop(cfg: TeleopConfig):
         act_processed_teleop = teleop_action_processor((act, obs))
 
         robot_action_to_send = robot_action_processor((act_processed_teleop, obs))
+        print("ACTION", robot_action_to_send)
         robot.send_action(robot_action_to_send)
 
         dt_s = time.perf_counter() - start_loop_t
