@@ -3,7 +3,11 @@ import time
 from typing import Any
 
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
-from lerobot.motors.motors_bus import MotorsBusBase
+try:
+    from lerobot.motors.motors_bus import MotorsBusBase
+except ImportError:
+    # LeRobot 0.4.3 exposes the same base class as MotorsBus.
+    from lerobot.motors.motors_bus import MotorsBus as MotorsBusBase
 from piper_sdk import C_PiperInterface_V2
 from wego_piper.port_handler import PortHandler
 
