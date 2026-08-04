@@ -6,8 +6,19 @@ from lerobot.motors import Motor, MotorCalibration, MotorNormMode
 try:
     from lerobot.motors.motors_bus import MotorsBusBase
 except ImportError:
-    # LeRobot 0.4.3 exposes the same base class as MotorsBus.
-    from lerobot.motors.motors_bus import MotorsBus as MotorsBusBase
+    # LeRobot 0.4.3 only exposes the abstract Dynamixel MotorsBus. Piper uses
+    # its own CAN protocol, so it needs only the shared state held by the old
+    # concrete base class, not the abstract Dynamixel methods.
+    class MotorsBusBase:
+        def __init__(
+            self,
+            port: str,
+            motors: dict[str, Motor],
+            calibration: dict[str, MotorCalibration],
+        ) -> None:
+            self.port = port
+            self.motors = motors
+            self.calibration = calibration
 from piper_sdk import C_PiperInterface_V2
 from wego_piper.port_handler import PortHandler
 
