@@ -1,6 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Literal
-
 from lerobot.cameras import CameraConfig
 from lerobot.robots import RobotConfig
 from lerobot.teleoperators import TeleoperatorConfig
@@ -16,7 +14,7 @@ class PiperFollowerConfig(RobotConfig):
     """
 
     port: str
-    control_space: Literal["joint", "cartesian"] = "joint"
+    control_space: str = "joint"
     use_gripper: bool = True
     cameras: dict[str, CameraConfig] = field(default_factory=dict)
 
@@ -34,7 +32,7 @@ class PiperFollowerConfig(RobotConfig):
     workspace_x: tuple[float, float] | None = None
     workspace_y: tuple[float, float] | None = None
     workspace_z: tuple[float, float] | None = None
-    move_mode: Literal["move_p", "move_l"] = "move_p"
+    move_mode: str = "move_p"
     move_speed_percent: int = 20
     gripper_effort: int = 1000
 
