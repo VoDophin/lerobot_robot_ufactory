@@ -3,22 +3,28 @@ import time
 from typing import Any
 
 from lerobot.motors import Motor, MotorCalibration, MotorNormMode
-try:
-    from lerobot.motors.motors_bus import MotorsBusBase
-except ImportError:
-    # LeRobot 0.4.3 only exposes the abstract Dynamixel MotorsBus. Piper uses
-    # its own CAN protocol, so it needs only the shared state held by the old
-    # concrete base class, not the abstract Dynamixel methods.
-    class MotorsBusBase:
-        def __init__(
-            self,
-            port: str,
-            motors: dict[str, Motor],
-            calibration: dict[str, MotorCalibration],
-        ) -> None:
-            self.port = port
-            self.motors = motors
-            self.calibration = calibration
+
+
+class PiperMotorsBusBase:
+    """Minimal state shared by Piper's CAN adapter.
+
+    LeRobot 0.4.3 exposes ``MotorsBus`` only as an abstract implementation for
+    Dynamixel/Feetech serial motors. Piper has a different CAN SDK and
+    implements its own transport and normalization methods below, so inheriting
+    that abstract class is neither necessary nor valid.
+    """
+
+    def __init__(
+        self,
+        port: str,
+        motors: dict[str, Motor],
+        calibration: dict[str, MotorCalibration],
+    ) -> None:
+        self.port = port
+        self.motors = motors
+        self.calibration = calibration
+
+
 from piper_sdk import C_PiperInterface_V2
 from wego_piper.port_handler import PortHandler
 
@@ -27,7 +33,7 @@ from .tables import PARKING_POSITION
 logger = logging.getLogger(__name__)
 
 
-class PiperMotorsBus(MotorsBusBase):
+class PiperMotorsBus(PiperMotorsBusBase):
     """CAN bus adapter derived from the standalone lerobot_robot_piper project."""
 
     apply_drive_mode = False
