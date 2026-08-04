@@ -47,6 +47,13 @@ teleop:
   scale_xyz: 1.0
   tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
   robot_base_pose: [300, 0, 250, 180, 0, 0]
+  # Reference translation and V3 orientation-axis correction. Gripper and
+  # Piper follower settings remain unchanged.
+  use_calibrated_translation_mapping: true
+  use_calibrated_rotation_mapping: true
+  apply_piper_tool_axis_correction: true
+  rotation_dominant_axis: true
+  rotation_scale: 0.25
 
 dataset:
   root: ./data/single_pika_piper

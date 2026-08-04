@@ -1,15 +1,52 @@
 #!/usr/bin/env python
 
-import time
 import math
-from typing import Any
+import time
 from threading import Thread, Event, Lock
+from typing import Any
+
+import numpy as np
 from lerobot.utils.errors import DeviceNotConnectedError
 from lerobot_robot_ufactory.devices.pika import PikaDevice
 from lerobot_robot_ufactory.devices.umi.vive_tracker.transformations import Transformations
 from ..base_teleop import UFBaseTeleop
 from .pika_teleop_config import PikaTeleopConfig
 # 读取 Pika 位姿和 Pika 夹爪输入，输出相关数据
+
+
+# Calibrated in the reference Piper setup from Pika right/forward/up tests.
+# It maps the original relative XYZ action vector to the Piper convention.
+_PIKA_TO_PIPER_TRANSLATION = np.array(
+    [
+        [0.52718794, -0.81988978, -0.22327926],
+        [0.59104387, 0.16501522, 0.78958035],
+        [-0.61052438, -0.54822508, 0.57158486],
+    ],
+    dtype=float,
+)
+
+# Calibrated in the reference Piper setup from Pika-only rotation gestures.
+# It maps the original relative axis-angle vector to the Piper convention.
+_PIKA_TO_PIPER_ROTATION = np.array(
+    [
+        [0.99266317, 0.11349864, -0.04168796],
+        [-0.11927281, 0.97574876, -0.18354388],
+        [0.01984499, 0.18716949, 0.98212716],
+    ],
+    dtype=float,
+)
+
+# V3 visual tool-axis correction:
+# [new RX, new RY, new RZ] = [old RY, -old RX, old RZ].
+_PIPER_TOOL_AXIS_CORRECTION = np.array(
+    [
+        [0.0, 1.0, 0.0],
+        [-1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ],
+    dtype=float,
+)
+
 
 class PikaTeleop(UFBaseTeleop, Thread):
     
@@ -177,6 +214,57 @@ class PikaTeleop(UFBaseTeleop, Thread):
         else:
             pass
 
+        # Keep the cached action in the original Pika frame. The calibrated
+        # pose is returned as a copy, so a tracker dropout cannot calibrate an
+        # already-calibrated rotation again on the next control cycle.
+        action = dict(self._last_action)
+
+        if self._teleop_enabled and self.config.use_calibrated_translation_mapping:
+            translation_keys = (
+                f"{self.prefix}pose.x",
+                f"{self.prefix}pose.y",
+                f"{self.prefix}pose.z",
+            )
+            origin = np.asarray(self._last_robot_pose[:3], dtype=float)
+            raw_target = np.asarray([action[key] for key in translation_keys], dtype=float)
+            corrected_target = origin + _PIKA_TO_PIPER_TRANSLATION @ (raw_target - origin)
+            for key, value in zip(translation_keys, corrected_target, strict=True):
+                action[key] = float(value)
+
+        if self._teleop_enabled and self.config.use_calibrated_rotation_mapping:
+            rotation_keys = (
+                f"{self.prefix}pose.rx",
+                f"{self.prefix}pose.ry",
+                f"{self.prefix}pose.rz",
+            )
+            origin_rotation = Transformations.rxryrz_to_rotation_matrix(
+                *self._last_robot_pose[3:6]
+            )
+            target_rotation = Transformations.rxryrz_to_rotation_matrix(
+                *(float(action[key]) for key in rotation_keys)
+            )
+            relative_rotation = origin_rotation.T @ target_rotation
+            relative_vector = Transformations.rotation_matrix_to_rxryrz(
+                relative_rotation
+            )
+            mapped_vector = _PIKA_TO_PIPER_ROTATION @ relative_vector
+            if self.config.apply_piper_tool_axis_correction:
+                mapped_vector = _PIPER_TOOL_AXIS_CORRECTION @ mapped_vector
+            if self.config.rotation_dominant_axis:
+                dominant_index = int(np.argmax(np.abs(mapped_vector)))
+                dominant_vector = np.zeros(3, dtype=float)
+                dominant_vector[dominant_index] = mapped_vector[dominant_index]
+                mapped_vector = dominant_vector
+            mapped_vector *= self.config.rotation_scale
+            corrected_rotation = origin_rotation @ Transformations.rxryrz_to_rotation_matrix(
+                *mapped_vector
+            )
+            corrected_vector = Transformations.rotation_matrix_to_rxryrz(
+                corrected_rotation
+            )
+            for key, value in zip(rotation_keys, corrected_vector, strict=True):
+                action[key] = float(value)
+
         if self.config.use_gripper:
             distance  = min(max(self.pika_sense.get_gripper_distance(), 0), 100)
             if distance is not None:
@@ -184,7 +272,8 @@ class PikaTeleop(UFBaseTeleop, Thread):
             else:
                 gripper_pos = 0.0
             self._last_action.update({f"{self.prefix}gripper.pos": gripper_pos})
-        return self._last_action
+            action[f"{self.prefix}gripper.pos"] = gripper_pos
+        return action
 
     def send_feedback(self, feedback: dict[str, float]) -> None:
         raise NotImplementedError

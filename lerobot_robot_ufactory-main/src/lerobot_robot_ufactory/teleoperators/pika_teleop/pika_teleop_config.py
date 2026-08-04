@@ -29,6 +29,16 @@ class PikaTeleopConfig(TeleoperatorConfig):
     scale_xyz: float = 1.0
     tracker_to_robot_eef: Tuple[float, ...] = (0, 0, 0, 180, -90, 0)    # [x, y, z, roll(°), pitch(°), yaw(°)]
     robot_base_pose: Tuple[float, ...] = (400, 0, 400, 180, 0, 0)       # [x, y, z, roll(°), pitch(°), yaw(°)]
+    # Optional calibrated Pika -> Piper orientation mapping. These settings
+    # affect pose.rx/pose.ry/pose.rz only; translation and gripper behavior
+    # remain the original implementation.
+    use_calibrated_translation_mapping: bool = False
+    use_calibrated_rotation_mapping: bool = False
+    apply_piper_tool_axis_correction: bool = False
+    rotation_dominant_axis: bool = False
+    rotation_scale: float = 1.0
 
     def __post_init__(self):
         self.id = 'pika_teleop' if self.id is None else self.id
+        if self.rotation_scale <= 0:
+            raise ValueError("rotation_scale must be positive")
