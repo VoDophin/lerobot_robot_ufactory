@@ -24,7 +24,7 @@ robot:
   workspace_y: [-500, 500]
   workspace_z: [50, 600]
   move_mode: move_p
-  move_speed_percent: 10
+  move_speed_percent: 5
   gripper_effort: 1000
   cameras:
     wrist:
@@ -44,8 +44,8 @@ teleop:
   frequency: 100
   # Pika is the input device here; this reads its gripper/trigger as a command signal.
   use_gripper: true 
-  scale_xyz: 0.5
-  tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+  scale_xyz: 0.4
+  tracker_to_robot_eef: [0, 0, 0, 2.107, 0.243, -27.181]
   robot_base_pose: [300, 0, 250, 180, 0, 0]
 
 dataset:

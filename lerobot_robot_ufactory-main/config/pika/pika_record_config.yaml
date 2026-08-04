@@ -20,7 +20,8 @@ teleop:
   id: "pika_xxxx"
   # port: "/dev/ttyUSB0"
   scale_xyz: 1.5
-  tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+  # tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+  tracker_to_robot_eef: [0, 0, 0, -43.805, 37.627, 48.268]
   robot_base_pose: [400, 0, 400, 180, 0, 0]
 
 dataset:
