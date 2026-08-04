@@ -47,22 +47,41 @@ class PiperMotorsBus(PiperMotorsBusBase):
     def is_calibrated(self) -> bool:
         return True
 
+#    def connect(self, handshake: bool = True) -> None:
+#        if self._is_connected:
+#            return
+#        self.port_handler.setupPort(self.piper)
+#        if not self.port_handler.openPort():
+#            raise ConnectionError(f"Failed to open CAN port {self.port!r} for {self.id}")
+#        self._is_connected = True
     def connect(self, handshake: bool = True) -> None:
         if self._is_connected:
             return
-        self.port_handler.setupPort(self.piper)
-        if not self.port_handler.openPort():
-            raise ConnectionError(f"Failed to open CAN port {self.port!r} for {self.id}")
-        self._is_connected = True
 
+        if hasattr(self.piper, "ConnectPort"):
+            result = self.piper.ConnectPort()
+            if result is False:
+                raise ConnectionError(f"Failed to open CAN port {self.port!r} for {self.id}")
+        else:
+            self.port_handler.setupPort(self.piper)
+            if not self.port_handler.openPort():
+                raise ConnectionError(f"Failed to open CAN port {self.port!r} for {self.id}")
+
+        self._is_connected = True
     def disconnect(self, disable_torque: bool = True, park: bool = False) -> None:
         if not self._is_connected:
             return
         if park:
             self.parking()
         if disable_torque:
-            self.piper.DisablePiper()
-        self.port_handler.closePort()
+        #    self.piper.DisablePiper()
+            self._disable_arm()
+        
+        # self.port_handler.closePort()
+        if hasattr(self.piper, "DisconnectPort"):
+            self.piper.DisconnectPort()
+        else:
+            self.port_handler.closePort()
         self._is_connected = False
 
     def read(self, data_name: str, motor: str) -> int | float:
@@ -82,22 +101,66 @@ class PiperMotorsBus(PiperMotorsBusBase):
         selected = [motors] if isinstance(motors, str) else motors
         return {motor: position[motor] for motor in selected if motor in position}
 
-    def sync_write(self, data_name: str, values: dict[str, int | float]) -> None:
-        self.set_joint_position(values)
+#    def sync_write(self, data_name: str, values: dict[str, int | float]) -> None:
+#        self.set_joint_position(values)
 
+#    def enable_torque(self, motors: str | list[str] | None = None, num_retry: int = 0) -> None:
+#        retries = num_retry if num_retry > 0 else 50
+#        while retries > 0:
+#            if self.piper.EnablePiper():
+#                return
+#            retries -= 1
+#            time.sleep(0.1)
+#        raise TimeoutError(f"Timed out enabling Piper arm {self.id} on {self.port}"
+
+#    def disable_torque(
+#        self, motors: str | list[str] | None = None, num_retry: int = 0
+#    ) -> None:
+#        self.piper.DisablePiper()
     def enable_torque(self, motors: str | list[str] | None = None, num_retry: int = 0) -> None:
         retries = num_retry if num_retry > 0 else 50
         while retries > 0:
-            if self.piper.EnablePiper():
+            if self._enable_arm():
                 return
             retries -= 1
             time.sleep(0.1)
         raise TimeoutError(f"Timed out enabling Piper arm {self.id} on {self.port}")
 
+
     def disable_torque(
         self, motors: str | list[str] | None = None, num_retry: int = 0
     ) -> None:
-        self.piper.DisablePiper()
+        self._disable_arm()
+
+
+    def _enable_arm(self) -> bool:
+        return self._call_arm_power_method(("EnablePiper", "EnableArm"))
+
+
+    def _disable_arm(self) -> bool:
+        return self._call_arm_power_method(("DisablePiper", "DisableArm"))
+
+
+    def _call_arm_power_method(self, method_names: tuple[str, ...]) -> bool:
+        type_errors: list[TypeError] = []
+        for method_name in method_names:
+            method = getattr(self.piper, method_name, None)
+            if not callable(method):
+                continue
+            for args in ((), (7,)):
+                try:
+                    result = method(*args)
+                except TypeError as exc:
+                    type_errors.append(exc)
+                    continue
+                return True if result is None else bool(result)
+
+        if type_errors:
+            raise type_errors[-1]
+
+        raise AttributeError(
+            f"Piper SDK object has none of the expected methods: {', '.join(method_names)}"
+        )
 
     def read_calibration(self) -> dict[str, MotorCalibration]:
         return self.calibration
