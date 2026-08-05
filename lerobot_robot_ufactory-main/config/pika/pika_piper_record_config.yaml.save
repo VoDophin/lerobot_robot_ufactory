@@ -47,18 +47,15 @@ teleop:
   use_gripper: true
   scale_xyz: 0.8
   rotation_scale: 1.0
-  translation_map_rpy: [0, 0, 0]
+  translation_map_rpy: [0, 0, 9
+0]
   lock_orientation: false
 
   rotation_map_rpy: [0, 0, 0]
+  rotation_scale: 0.4
 
   robot_base_pose: [300, 0, 250, 180, 0, 0]
-  rotation_map_rpy: [0, 0, 0]
-  
-  rotation_axis_map: [1, 2, 0]
-  rotation_axis_sign: [-1, -1, 1]
-  rotation_scale: 0.5
-  lock_orientation: false
+
 dataset:
   root: ./data/single_pika_piper
   repo_id: local/single_pika_piper

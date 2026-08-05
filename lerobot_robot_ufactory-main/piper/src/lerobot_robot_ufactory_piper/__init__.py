@@ -18,7 +18,7 @@ from .config import (
 from .piper_follower import DualPiperFollower, PiperFollower
 from .piper_leader import DualPiperLeader, PiperLeader
 from .pika_teleop import DualPikaTeleop
-
+from .pika_split_teleop import SplitPikaTeleop, SplitPikaTeleopConfig
 __all__ = [
     "DualPikaTeleop",
     "DualPikaTeleopConfig",
@@ -30,5 +30,7 @@ __all__ = [
     "PiperFollowerConfig",
     "PiperLeader",
     "PiperLeaderConfig",
+    "SplitPikaTeleop",
+    "SplitPikaTeleopConfig",
 ]
 
