@@ -1,0 +1,150 @@
+# Third dual-arm hardware test: grippers only.
+# Keep both Pikas still. Translation is heavily attenuated and rejected by a
+# large deadband; wrist orientation is locked. Test one gripper at a time.
+robot:
+  type: uf::dual_piper
+  id: dual_piper_gripper_preflight
+  parallel_connect: true
+  parallel_observation: true
+  # Piper SDK command writes are serialized. The two CAN interfaces are
+  # independent, but concurrent SDK writes can be lost without raising an
+  # exception; sequential writes still run inside the same 50 Hz loop.
+  parallel_action: false
+  robots:
+    left:
+      type: uf::piper
+      id: left_piper
+      port: can_left
+      control_space: cartesian
+      configure_role_on_connect: false
+      piper_init_on_connect: false
+      enable_torque_on_connect: false
+      park_on_connect: false
+      park_on_disconnect: false
+      disable_torque_on_disconnect: false
+      hold_position_on_disconnect: false
+      feedback_startup_timeout_s: 5.0
+      cartesian_command_mode: direct
+      max_cartesian_step_mm: 1.0
+      max_rotation_step_rad: 0.01
+      max_cartesian_following_error_mm: 80.0
+      max_rotation_following_error_rad: 0.35
+      direct_max_step_mm: 1.0
+      direct_max_step_rad: 0.01
+      translation_deadband_mm: 5.0
+      rotation_deadband_rad: 0.02
+      lock_orientation: true
+      send_cartesian_pose: false
+      workspace_x: [50.0, 600.0]
+      workspace_y: [-500.0, 500.0]
+      workspace_z: [50.0, 600.0]
+      move_mode: move_p
+      move_speed_percent: 5
+      send_gripper: true
+      gripper_effort: 1000
+      gripper_ctrl_code: 3
+      # The original working dual-arm implementation streamed GripperCtrl on
+      # every due cycle. Piper gripper motion is unreliable with one-shot
+      # targets, so keep this preflight in the same streaming mode.
+      gripper_command_deadband: 0.0
+      gripper_min_command_interval_s: 0.03
+      gripper_keepalive_s: 0.03
+      gripper_debug: true
+      cameras: {}
+    right:
+      type: uf::piper
+      id: right_piper
+      port: can_right
+      control_space: cartesian
+      configure_role_on_connect: false
+      piper_init_on_connect: false
+      enable_torque_on_connect: false
+      park_on_connect: false
+      park_on_disconnect: false
+      disable_torque_on_disconnect: false
+      hold_position_on_disconnect: false
+      feedback_startup_timeout_s: 5.0
+      cartesian_command_mode: direct
+      max_cartesian_step_mm: 1.0
+      max_rotation_step_rad: 0.01
+      max_cartesian_following_error_mm: 80.0
+      max_rotation_following_error_rad: 0.35
+      direct_max_step_mm: 1.0
+      direct_max_step_rad: 0.01
+      translation_deadband_mm: 5.0
+      rotation_deadband_rad: 0.02
+      lock_orientation: true
+      send_cartesian_pose: false
+      workspace_x: [50.0, 600.0]
+      workspace_y: [-500.0, 500.0]
+      workspace_z: [50.0, 600.0]
+      move_mode: move_p
+      move_speed_percent: 5
+      send_gripper: true
+      gripper_effort: 1000
+      gripper_ctrl_code: 3
+      gripper_command_deadband: 0.0
+      gripper_min_command_interval_s: 0.03
+      gripper_keepalive_s: 0.03
+      gripper_debug: true
+      cameras: {}
+
+teleop:
+  type: uf::dual_pika_teleop
+  id: dual_pika_gripper_preflight
+  parallel_read: true
+  teleops:
+    left:
+      type: uf::piper_pika_teleop
+      id: left_pika
+      port: /dev/pika_left
+      frequency: 50
+      use_gripper: true
+      scale_xyz: 0.01
+      tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+      robot_base_pose: [300, 150, 250, 180, 0, 0]
+      tracker_device_id: LHR-818D4A5D
+      use_raw_translation_mapping: true
+      use_calibrated_rotation_mapping: true
+      rotation_scale: 0.10
+      rotation_filter_alpha: 0.35
+      gripper_use_direct_distance: true
+      gripper_distance_min_mm: 0.4
+      gripper_distance_max_mm: 98.1
+      gripper_filter_window: 3
+      gripper_filter_alpha: 0.75
+      gripper_deadband: 0.005
+      gripper_max_step: 0.15
+    right:
+      type: uf::piper_pika_teleop
+      id: right_pika
+      port: /dev/pika_right
+      frequency: 50
+      use_gripper: true
+      scale_xyz: 0.01
+      tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+      robot_base_pose: [300, -150, 250, 180, 0, 0]
+      tracker_device_id: LHR-52C31F65
+      use_raw_translation_mapping: true
+      use_calibrated_rotation_mapping: true
+      rotation_scale: 0.10
+      rotation_filter_alpha: 0.35
+      gripper_use_direct_distance: true
+      gripper_distance_min_mm: 0.4
+      gripper_distance_max_mm: 98.1
+      gripper_filter_window: 3
+      gripper_filter_alpha: 0.75
+      gripper_deadband: 0.005
+      gripper_max_step: 0.15
+
+fps: 50
+
+dataset:
+  root: /home/star/lerobot_data/dual_pika_piper_gripper_preflight
+  repo_id: local/dual_pika_piper_gripper_preflight
+  single_task: Dual Pika to dual Piper gripper preflight
+  fps: 50
+  episode_time_s: 15
+  reset_time_s: 20
+  num_episodes: 1
+  push_to_hub: false

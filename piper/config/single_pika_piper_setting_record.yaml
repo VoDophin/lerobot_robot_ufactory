@@ -1,0 +1,95 @@
+# Pika -> Piper 录制配置：single_pika_piper_setting + Intel D435i RGB。
+# 只采集 Intel 相机 RGB 和 Piper 位姿/夹爪数据（Piper 上未装腕部相机）。
+# 注意：LeRobot 0.4.3 未注册 realsense 类型（需 pyrealsense2），这里用
+# opencv 直接读 D435i 的 RGB 视频节点（video-index0）。
+robot:
+  type: uf::piper
+  id: piper_follower
+  port: can0
+  control_space: cartesian
+  configure_role_on_connect: true
+  park_on_connect: false
+  park_on_disconnect: false
+  disable_torque_on_disconnect: false
+  hold_position_on_disconnect: true
+  feedback_startup_timeout_s: 5.0
+
+  cartesian_command_mode: direct
+  max_cartesian_step_mm: 6.0
+  max_rotation_step_rad: 0.10
+  max_cartesian_following_error_mm: 600.0
+  max_rotation_following_error_rad: 3.2
+  direct_max_step_mm: 25.0
+  direct_max_step_rad: 0.35
+  translation_deadband_mm: 0.5
+  rotation_deadband_rad: 0.004
+  workspace_x: [50.0, 600.0]
+  workspace_y: [-500.0, 500.0]
+  workspace_z: [50.0, 600.0]
+  move_mode: move_p
+  move_speed_percent: 70
+  startup_tcp_pose: null
+  startup_move_timeout_s: 30
+
+  send_gripper: true
+  gripper_effort: 1000
+  gripper_ctrl_code: 3
+  gripper_command_deadband: 0.005
+  gripper_min_command_interval_s: 0.03
+  gripper_keepalive_s: 0.20
+  cameras:
+    realsense:
+      # D435i UVC 节点拒绝手动分辨率设置；piper 插件已给 opencv 相机打上
+      # "宽容补丁"（cameras.py）：设置失败时继续用设备默认 640x480@30。
+      type: opencv
+      index_or_path: /dev/video12
+      width: 640
+      height: 480
+      fps: 30
+
+teleop:
+  type: uf::piper_pika_teleop
+  id: pika_piper_setting_record
+  port: /dev/ttyUSB50
+  frequency: 100
+  use_gripper: true
+  scale_xyz: 1.0
+  tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+  # Must match startup_tcp_pose so the rotation pipeline is skew-free and the
+  # calibrated rotation mapping matrix stays valid at the actual pose.
+  robot_base_pose: [214.476, 3.501, 263.671, -146.447, -7.5, -91.716]
+  tracker_device_id: T20
+
+  use_raw_translation_mapping: true
+
+  use_calibrated_rotation_mapping: true
+  apply_piper_tool_axis_correction: true
+  rotation_style: calibrated
+  # Re-derived 2026-08-07 for the startup pose: raw X (Pika roll) -> gripper
+  # approach axis, raw Y (pitch down) -> base +Y, raw Z (yaw) -> base +Z.
+  rotation_mapping_matrix: [
+    [0.000000000, 0.991000235, -0.130526192],
+    [0.000000000, 0.047154810, 0.547979619],
+    [-1.000000000, 0.125279522, 0.826245272],
+  ]
+  rotation_dominant_axis: false
+  rotation_scale: 1.0
+  rotation_filter_alpha: 0.8
+
+  gripper_use_direct_distance: true
+  gripper_distance_min_mm: 0.4
+  gripper_distance_max_mm: 98.1
+  gripper_filter_window: 3
+  gripper_filter_alpha: 0.75
+  gripper_deadband: 0.005
+  gripper_max_step: 0.15
+
+dataset:
+  root: /home/admin1/lerobot_data/single_pika_piper_setting_record
+  repo_id: local/single_pika_piper_setting_record
+  single_task: Move the object with the Piper arm
+  fps: 30
+  episode_time_s: 10
+  reset_time_s: 10
+  num_episodes: 50
+  push_to_hub: false

@@ -1,0 +1,86 @@
+# Pika -> Piper joint_stream_v15（V15 保留版）: 关节空间流式（纯 numpy IK）。
+#
+# NEW motion mode: the Cartesian Pika target is solved to joints with
+# pinocchio IK on our side and streamed through the SDK joint control mode
+# (MotionCtrl_2 0x01/0x01 + JointCtrl) with per-cycle joint step limits.
+# This replaces MOVE P re-planning. V13/V14 (MOVE P) are untouched.
+#
+# BEFORE first run: run the hand-eye calibration (pure numpy, no extra
+# install needed):
+#   python piper/tools/verify_ik_fk.py --port can0 --calibrate
+# Then fill in base_xyz_mm / base_rpy_deg / ee_xyz_mm / ee_rpy_deg from its
+# output.
+robot:
+  type: uf::piper_joint_stream
+  id: piper_joint_stream_follower
+  port: can0
+  configure_role_on_connect: true
+  park_on_connect: false
+  park_on_disconnect: false
+  disable_torque_on_disconnect: false
+
+  workspace_x: [100.0, 600.0]
+  workspace_y: [-500.0, 500.0]
+  workspace_z: [50.0, 600.0]
+  max_cartesian_step_mm: 8.0
+  max_rotation_step_rad: 0.08
+  translation_deadband_mm: 0.5
+  rotation_deadband_rad: 0.004
+
+  max_joint_step_deg: 3.0
+  ik_max_iter: 10
+  ik_damping: 0.001
+  ik_weight_ori: 1.0
+  ik_residual_limit: 0.03
+  move_speed_percent: 30
+  # Hand-eye calibration output (T_sdk = X_base @ chain(q) @ X_ee).
+  base_xyz_mm: [0.0, 0.0, 0.0]
+  base_rpy_deg: [0.0, 0.0, 0.0]
+  ee_xyz_mm: [0.0, 0.0, 0.0]
+  ee_rpy_deg: [0.0, 0.0, 0.0]
+
+  send_gripper: true
+  gripper_effort: 1000
+  gripper_ctrl_code: 3
+  gripper_command_deadband: 0.005
+  gripper_min_command_interval_s: 0.03
+  gripper_keepalive_s: 0.20
+  cameras: {}
+
+teleop:
+  type: uf::piper_pika_teleop
+  id: pika_piper_joint_stream_v15
+  port: /dev/ttyUSB50
+  frequency: 100
+  use_gripper: true
+  scale_xyz: 1.0
+  tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+  robot_base_pose: [300, 0, 250, 180, 0, 0]
+
+  use_raw_translation_mapping: true
+
+  use_calibrated_rotation_mapping: true
+  apply_piper_tool_axis_correction: true
+  rotation_dominant_axis: false
+  rotation_scale: 1.0
+  rotation_filter_alpha: 0.4
+
+  gripper_use_direct_distance: true
+  gripper_distance_min_mm: 0.4
+  gripper_distance_max_mm: 98.1
+  gripper_filter_window: 3
+  gripper_filter_alpha: 0.75
+  gripper_deadband: 0.005
+  gripper_max_step: 0.15
+
+fps: 50
+
+dataset:
+  root: /home/admin1/lerobot_data/single_pika_piper_joint_stream_v15
+  repo_id: local/single_pika_piper_joint_stream_v15
+  single_task: Pika to Piper joint-space streaming
+  fps: 50
+  episode_time_s: 10
+  reset_time_s: 20
+  num_episodes: 1
+  push_to_hub: false

@@ -1,0 +1,69 @@
+# 方案一：两套 Pika 直接采集（不驱动机械臂）。
+# 运行前替换两个串口、相机路径、dataset.root/repo_id/task。
+robot:
+  type: uf::multiple_mock_robot
+  id: dual_pika_sensor_robot
+  robots:
+    left:
+      type: uf::mock_robot
+      id: left_pika_sensor
+      teleop_id: left_pika
+      control_space: cartesian
+      gripper_type: 1
+      cameras:
+        wrist:
+          type: opencv
+          index_or_path: /dev/v4l/by-id/REPLACE_LEFT_CAMERA
+          width: 640
+          height: 480
+          fps: 30
+          fourcc: MJPG
+    right:
+      type: uf::mock_robot
+      id: right_pika_sensor
+      teleop_id: right_pika
+      control_space: cartesian
+      gripper_type: 1
+      cameras:
+        wrist:
+          type: opencv
+          index_or_path: /dev/v4l/by-id/REPLACE_RIGHT_CAMERA
+          width: 640
+          height: 480
+          fps: 30
+          fourcc: MJPG
+
+teleop:
+  type: uf::dual_pika_teleop
+  id: dual_pika
+  parallel_read: true
+  teleops:
+    left:
+      type: uf::pika_teleop
+      id: left_pika
+      port: /dev/REPLACE_LEFT_PIKA
+      frequency: 100
+      use_gripper: true
+      scale_xyz: 1.0
+      tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+      robot_base_pose: [300, 150, 250, 180, 0, 0]
+    right:
+      type: uf::pika_teleop
+      id: right_pika
+      port: /dev/REPLACE_RIGHT_PIKA
+      frequency: 100
+      use_gripper: true
+      scale_xyz: 1.0
+      tracker_to_robot_eef: [0, 0, 0, 180, -90, 0]
+      robot_base_pose: [300, -150, 250, 180, 0, 0]
+
+dataset:
+  root: ./data/dual_pika_direct
+  repo_id: local/dual_pika_direct
+  single_task: REPLACE_TASK_DESCRIPTION
+  fps: 30
+  episode_time_s: 60
+  reset_time_s: 20
+  num_episodes: 50
+  push_to_hub: false
+

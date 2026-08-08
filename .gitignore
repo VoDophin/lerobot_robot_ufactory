@@ -1,0 +1,90 @@
+# ============================
+# Python
+# ============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.so.*
+!src/lerobot_robot_ufactory/devices/umi/xvlib/lib*.so
+!src/lerobot_robot_ufactory/devices/umi/xvlib/lib*.so.*
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+sdist/
+wheels/
+*.whl
+.eggs/
+Pipfile.lock
+poetry.lock
+
+# 虚拟环境
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================
+# IDE / 编辑器
+# ============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================
+# 环境变量 & 配置
+# ============================
+.env
+.env.local
+.env.*.local
+*.local.toml
+
+# ============================
+# 测试 & 覆盖率
+# ============================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ============================
+# Jupyter Notebook
+# ============================
+.ipynb_checkpoints/
+*.ipynb
+
+# ============================
+# 打包 & 发布
+# ============================
+*.log
+*.log.*
+*.tar.gz
+*.zip
+
+# ============================
+# 项目特定
+# ============================
+outputs/
+checkpoints/
+runs/
+wandb/
+models/
+*.onnx
+*.engine
+*.trt
+*.xvcd
+ufactory_usage/
