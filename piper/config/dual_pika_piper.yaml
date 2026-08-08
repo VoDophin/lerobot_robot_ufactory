@@ -13,7 +13,9 @@ robot:
   id: dual_piper
   parallel_connect: true
   parallel_observation: true
-  parallel_action: true
+  # Serialize SDK writes across the two CAN interfaces. Both arms still
+  # receive one command per 50 Hz control cycle.
+  parallel_action: false
   robots:
     left:
       type: uf::piper
@@ -21,13 +23,18 @@ robot:
       # udev 固定名（按 USB 物理口）：左臂 CAN 适配器 -> can_left
       port: can_left
       control_space: cartesian
-      configure_role_on_connect: true
+      # MasterSlaveConfig(0xFC) prevents the official gripper from following
+      # direct GripperCtrl on this hardware. Use explicit CAN control instead.
+      configure_role_on_connect: false
+      piper_init_on_connect: false
+      enable_torque_on_connect: true
       park_on_connect: false
       park_on_disconnect: false
       disable_torque_on_disconnect: false
       hold_position_on_disconnect: true
       feedback_startup_timeout_s: 5.0
       cartesian_command_mode: direct
+      send_cartesian_pose: true
       max_cartesian_step_mm: 6.0
       max_rotation_step_rad: 0.10
       max_cartesian_following_error_mm: 600.0
@@ -46,9 +53,10 @@ robot:
       send_gripper: true
       gripper_effort: 1000
       gripper_ctrl_code: 3
-      gripper_command_deadband: 0.005
+      gripper_command_deadband: 0.0
       gripper_min_command_interval_s: 0.03
-      gripper_keepalive_s: 0.20
+      gripper_keepalive_s: 0.03
+      gripper_debug: true
       cameras: {}
     right:
       type: uf::piper
@@ -56,13 +64,16 @@ robot:
       # 右臂 CAN 适配器 -> can_right
       port: can_right
       control_space: cartesian
-      configure_role_on_connect: true
+      configure_role_on_connect: false
+      piper_init_on_connect: false
+      enable_torque_on_connect: true
       park_on_connect: false
       park_on_disconnect: false
       disable_torque_on_disconnect: false
       hold_position_on_disconnect: true
       feedback_startup_timeout_s: 5.0
       cartesian_command_mode: direct
+      send_cartesian_pose: true
       max_cartesian_step_mm: 6.0
       max_rotation_step_rad: 0.10
       max_cartesian_following_error_mm: 600.0
@@ -79,9 +90,10 @@ robot:
       send_gripper: true
       gripper_effort: 1000
       gripper_ctrl_code: 3
-      gripper_command_deadband: 0.005
+      gripper_command_deadband: 0.0
       gripper_min_command_interval_s: 0.03
-      gripper_keepalive_s: 0.20
+      gripper_keepalive_s: 0.03
+      gripper_debug: true
       cameras: {}
 
 teleop:
